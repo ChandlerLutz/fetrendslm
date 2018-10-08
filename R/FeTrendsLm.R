@@ -129,7 +129,7 @@ initialize <- function(DT, .f, main.reg.vars = NULL, cluster.vars = NULL,
     .[. %in% c(numeric.vars)]
 
   ##Leave Y as a sparse (dense) matrix
-  Y <- as(as.matrix(DT[, .SD, .SDcols = private$..main.reg.vars]), "dgeMatrix")
+  Y <- as(as.matrix(DT[, .SD, .SDcols = private$..main.reg.vars]), "sparseMatrix")
 
   ##Remove main.reg.vars from the data.table
   delete.vars <- private$..main.reg.vars %>% .[!(. %in% po.vars.unique)]
@@ -326,7 +326,7 @@ fetrendslm <- function(y.var, x.vars) {
     ## Formula for meet from Cameron and Miller (2015) eq. 11
     meat <- cbind(X.DT, resid.DT, private$..DT.cluster) %>%
       ##Collapse by the cluster variables
-      .[, .(X.mat = list(as(as.matrix(.SD), "dgeMatrix")),
+      .[, .(X.mat = list(as(as.matrix(.SD), "sparseMatrix")),
             U.mat = list(as(as.matrix(resid), "dgeMatrix"))),
         .SDcols = x.vars,
         by = cluster] %>%
