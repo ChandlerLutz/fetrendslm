@@ -239,7 +239,9 @@ initialize <- function(DT, .f, main.reg.vars = NULL, cluster.vars = NULL,
                                         Y * sqrt(private$..weight.vals))))
       } else {
         ##non-weighted least squares
-        Y <- Y - X %*% (solve(crossprod(X), crossprod(X, Y)))
+        beta <- solve(crossprod(X), crossprod(X, Y))
+        Yhat <- X %*% beta; rm(beta)
+        Y <- Y - Yhat; rm(Yhat)
       }
 
       ##Remove the values from char.temp.unique for this
