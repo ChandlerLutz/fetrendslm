@@ -304,10 +304,12 @@ fetrendslm <- function(y.var, x.vars) {
     omega <- tcrossprod(resid) %>% diag %>% Diagonal(x = .)
     ##the meat --  X' Omega X
     meat <- crossprod(X, omega) %*% X
+    rm(omega)
 
     ##The bread
     XXinv <- solve(crossprod(X))
     se <- (XXinv %*% meat %*% XXinv * dfc) %>% diag %>% sqrt
+    rm(XXinv)
 
   } else {
     ##clustering
@@ -320,8 +322,11 @@ fetrendslm <- function(y.var, x.vars) {
     resid.DT <- resid %>% as.matrix %>% as.data.table
 
     ##helper function to get the meat of the var-cov matrix
-    f_meat <- function(X, U)
-      crossprod(X, U) %*% crossprod(U, X)
+    f_meat <- function(X, U) {
+      XU <- crossprod(X, U)
+      UX <- crossprod(U, X)
+      out <- XU %*% UX
+    }
 
     ## Formula for meet from Cameron and Miller (2015) eq. 11
     meat <- cbind(X.DT, resid.DT, private$..DT.cluster) %>%
