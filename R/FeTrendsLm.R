@@ -94,10 +94,12 @@ initialize <- function(DT, .f, main.reg.vars = NULL, cluster.vars = NULL,
 
   ##Make sure that there are no character missing classes
   lapply(DT.po.vars[["class"]], function(x) {
-    if (anyNA(x)) stop("Error: Some variables in .f have missing classes. Are you sure they are in the dataset?")
+    if (anyNA(x)) {
+      print(DT.po.vars)
+      stop("Error: Some variables in .f have missing classes. Are you sure they are in the dataset?")
+      }
     return(invisible(NULL))
   })
-
 
   ##Get the character vector for the
   DT.po.vars <- DT.po.vars[, char.var := Map(f_get_char_var, po.vars, class)]
