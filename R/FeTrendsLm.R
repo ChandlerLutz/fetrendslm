@@ -134,12 +134,18 @@ initialize <- function(DT, .f, main.reg.vars = NULL, cluster.vars = NULL,
   Y <- as(as.matrix(DT[, .SD, .SDcols = private$..main.reg.vars]), "sparseMatrix")
 
   ##Remove main.reg.vars from the data.table
-  delete.vars <- private$..main.reg.vars %>% .[!(. %in% po.vars.unique)]
-  DT[, (delete.vars) := NULL]; rm(delete.vars)
+  delete.vars <- private$..main.reg.vars %>% .[!(. %in% po.vars.unique)] %>%
+    unique(.)
+  if (length(delete.vars)) {
+    DT[, c(delete.vars) := NULL]; rm(delete.vars)
+  }
 
   ##Only keep columns that are going to be used in DT
-  delete.vars <- names(DT) %>% .[!(. %in% po.vars.unique)]
-  DT <- DT[, (delete.vars) := NULL]
+  delete.vars <- names(DT) %>% .[!(. %in% po.vars.unique)] %>% unique(.)
+  if (length(delete.vars) > 0) {
+    DT <- DT[, c(delete.vars) := NULL]; rm(delete.vars)
+  }
+
 
   ## --- Partial out all char vars and their interactions --- ##
 
