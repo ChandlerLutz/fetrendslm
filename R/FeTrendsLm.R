@@ -363,7 +363,7 @@ fetrendslm <- function(y.var, x.vars) {
   ##the degrees of freedom for the t-test
   t.df <- private$..N - length(x.vars) - private$..po.ncol
   ##Add in the p-value from a two-sided t-test
-  DT.tidy <- DT.tidy[, p.value := (1 - pt(statistic, df = c(t.df))) * 2]
+  DT.tidy <- DT.tidy[, p.value := (1 - pt(abs(statistic), df = c(t.df))) * 2]
 
 
 
