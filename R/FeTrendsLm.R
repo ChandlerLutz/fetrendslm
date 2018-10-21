@@ -146,7 +146,6 @@ initialize <- function(DT, .f, main.reg.vars = NULL, cluster.vars = NULL,
     DT <- DT[, c(delete.vars) := NULL]; rm(delete.vars)
   }
 
-
   ## --- Partial out all char vars and their interactions --- ##
 
   ##Add the index to the data to help with creating sparse matrices
