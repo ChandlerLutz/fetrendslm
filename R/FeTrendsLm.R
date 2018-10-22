@@ -266,7 +266,7 @@ initialize <- function(DT, .f, main.reg.vars = NULL, cluster.vars = NULL,
 
   rm(DT)
 
-  private$..Y = Y
+  self$Y = Y
 
 }
 
@@ -277,8 +277,8 @@ fetrendslm <- function(y.var, x.vars) {
   ##Just for you, R CMD check
   X.mat <- X.mat <- U.mat <- statistic <- std.error <- p.value <- cluster <- NULL
 
-  Y <- private$..Y[, y.var, drop = FALSE]
-  X <- private$..Y[, x.vars, drop = FALSE]
+  Y <- self$Y[, y.var, drop = FALSE]
+  X <- self$Y[, x.vars, drop = FALSE]
 
   if (!is.null(private$..weight.vals)) {
     ##weighted least squares
@@ -562,7 +562,8 @@ FeTrendsLm <- R6Class(
   ## ---------------------------------- ##
   public = list(
     initialize = initialize,
-    fetrendslm = fetrendslm
+    fetrendslm = fetrendslm,
+    Y = NULL ##The matrix Y with partialed out data
   ),
 
 
@@ -580,7 +581,7 @@ FeTrendsLm <- R6Class(
     ..chunk.size = NULL, ##The Size of the Chunk
     ..weight.var = NULL, ##The weight variable as a character string
     ..weight.vals = NULL, ##The sparse weight matrix
-    ..Y = NULL, ##The matrix Y with partialed out data
+
     ..DT.po.vars = NULL, ##data.table with infomration on the partialed out vars
     ..N = NULL, ##The number of observations in the dataset DT
     ..po.ncol = 0 ##the number of partialed out columns -- initialize to 0
@@ -595,7 +596,6 @@ FeTrendsLm <- R6Class(
     chunk.size = function() private$..chunk.size,
     weight.var = function() private$..weight.var,
     weight.mat = function() private$..weight.mat,
-    Y = function() private$..Y,
     DT.po.vars = function() private$..DT.po.vars,
     N = function() private$..N,
     po.ncol = function() private$..po.ncol
