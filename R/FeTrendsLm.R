@@ -376,6 +376,8 @@ fetrendslm <- function(y.var, x.vars) {
   f <- sprintf("%s ~ 0 + .", y.var)
   mod.lm <- lm(as.formula(f), DT.temp)
   mod.lm$coefficients <- beta
+  ##remove the model from mod.lm to save space
+  mod.lm$model <- NULL
 
   return(list(coef = beta, se = se, N = private$..N, DT.tidy = DT.tidy,
               lm.mod = mod.lm))
