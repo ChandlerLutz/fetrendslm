@@ -378,6 +378,13 @@ fetrendslm <- function(y.var, x.vars) {
   mod.lm$coefficients <- beta
   ##remove the model from mod.lm to save space
   mod.lm$model <- NULL
+  ##Further adjust mod.lm to save space
+  attr(test2$lm.mod$terms,"factors") <- NULL
+  attr(test2$lm.mod$terms,"dataClasses") <- NULL
+  attr(test2$lm.mod$terms,"predvars") <- NULL
+  attr(test2$lm.mod$terms,"variables") <- NULL
+  test2$lm.mod$residuals <- test2$lm.mod$residuals[1:10]
+  test2$lm.mod$fitted.values <- test2$lm.mod$fitted.values[1:10]
 
   return(list(coef = beta, se = se, N = private$..N, DT.tidy = DT.tidy,
               lm.mod = mod.lm))
