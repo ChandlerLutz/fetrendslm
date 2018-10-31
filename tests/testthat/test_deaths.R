@@ -15,14 +15,22 @@ context("deaths data")
 ## From mastering metrics
 data(deaths)
 
-DT <- deaths
+DT <- deaths %>%
+  .[, beerpercap.quintile := as.character(dplyr::ntile(beerpercap, 5))]
 
 ##For felm
-deaths2 <- copy(deaths) %>%
+deaths2 <- copy(DT) %>%
   .[, year.char := as.factor(year.char)] %>%
-  .[, state.char := as.factor(state.char)]
+  .[, state.char := as.factor(state.char)] %>%
+  .[, beerpercap.quintile := as.factor(beerpercap.quintile)]
 
 DT2 <- deaths2
+
+DT <- CLmisc::dummy_cols(DT, select_columns = "beerpercap.quintile",
+                         remove_first_dummy = TRUE,
+                         by_reference = TRUE)
+beercap.quantile.vars <- names(DT) %>% .[grepl("beerpercap.quintile_", x = .)]
+
 
 test_that("Basic Setup works against felm", {
   temp <- FeTrendsLm$new(DT = copy(DT),
@@ -47,13 +55,47 @@ test_that("Basic Setup works against felm", {
 
 })
 
+test_that("Basic Setup works against felm with beercap.quantile", {
+  temp <- FeTrendsLm$new(DT = copy(DT),
+                         .f = ~ state.char + year.char,
+                         cluster.vars = c("state.char"),
+                         chunk.size = 5)
+  res <- temp$fetrendslm(y.var = "mrate", x.vars = c("legal", beercap.quantile.vars))
+
+  res.felm <- felm(mrate ~ legal+ beerpercap.quintile | state.char + year.char  | 0 |
+                     state.char,
+                   DT2, exactDOF = TRUE) %>%
+      broom::tidy(.) %>% setDT
+
+  ##The coefficients
+  res.coef <- res$DT.tidy[, estimate] %>% round(2)
+  felm.coef <- res.felm[, estimate] %>% round(2)
+  expect_true(all.equal(res.coef[1], felm.coef[1]))
+
+  ##The standard errors
+  felm.se <- res.felm[, std.error] %>% round(2)
+  res.se <- res$DT.tidy[, std.error] %>% round(2)
+  expect_true(all.equal(felm.se[1], res.se[1], tolerance = 0.2))
+
+})
+
+
 formulas <- list(
   ~ state.char,
   ~ state.char + year.char,
   ~ state.char + year.char + state.char:year,
   ~ state.char + year.char + state.char:year + state.char:year2,
   ~ state.char + state.char:year,
-  ~ state.char + state.char:year + state.char:year2
+  ~ state.char + state.char:year + state.char:year2,
+  ## With beercap quintile
+  ~ state.char + beerpercap.quintile,
+  ~ state.char + year.char + beerpercap.quintile,
+  ~ state.char + year.char + beerpercap.quintile + state.char:year,
+  ~ state.char + year.char + beerpercap.quintile + state.char:year + state.char:year2,
+  ~ state.char + beerpercap.quintile + state.char:year,
+  ~ state.char + beerpercap.quintile + state.char:year + state.char:year2
+
+
 )
 
 y.vars <- c("mrate")
