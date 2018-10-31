@@ -83,19 +83,13 @@ test_that("Basic Setup works against felm with beercap.quantile", {
 formulas <- list(
   ~ state.char,
   ~ state.char + year.char,
+  ~ year.char + state.char,
   ~ state.char + year.char + state.char:year,
+  ~ year.char + state.char + state.char:year,
   ~ state.char + year.char + state.char:year + state.char:year2,
+  ~ year.char + state.char + state.char:year + state.char:year2,
   ~ state.char + state.char:year,
-  ~ state.char + state.char:year + state.char:year2,
-  ## With beercap quintile
-  ~ state.char + beerpercap.quintile,
-  ~ state.char + year.char + beerpercap.quintile,
-  ~ state.char + year.char + beerpercap.quintile + state.char:year,
-  ~ state.char + year.char + beerpercap.quintile + state.char:year + state.char:year2,
-  ~ state.char + beerpercap.quintile + state.char:year,
-  ~ state.char + beerpercap.quintile + state.char:year + state.char:year2
-
-
+  ~ state.char + state.char:year + state.char:year2
 )
 
 y.vars <- c("mrate")
