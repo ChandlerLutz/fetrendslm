@@ -15,16 +15,22 @@ context("deaths data")
 ## From mastering metrics
 data(deaths)
 
-DT <- deaths
+DT <- deaths %>%
+  .[, beerpercap.quintile := as.character(dplyr::ntile(beerpercap, 5))]
 
 ##For felm
-deaths2 <- copy(deaths) %>%
+deaths2 <- copy(DT) %>%
   .[, year.char := as.factor(year.char)] %>%
-  .[, state.char := as.factor(state.char)]
+  .[, state.char := as.factor(state.char)] %>%
+  .[, beerpercap.quintile := as.factor(beerpercap.quintile)]
 
-DT2 <- deaths
+DT2 <- deaths2
 
-print("here")
+DT <- CLmisc::dummy_cols(DT, select_columns = "beerpercap.quintile",
+                         remove_first_dummy = TRUE,
+                         by_reference = TRUE)
+beercap.quantile.vars <- names(DT) %>% .[grepl("beerpercap.quintile_", x = .)]
+
 
 test_that("Basic Setup works against felm", {
   temp <- FeTrendsLm$new(DT = copy(DT),
@@ -33,8 +39,8 @@ test_that("Basic Setup works against felm", {
                          chunk.size = 5)
   res <- temp$fetrendslm(y.var = "mrate", x.vars = c("legal"))
 
-  res.felm <- felm(mrate ~ legal | state.char + year.char | 0 | state.char,
-                   DT2, exactDOF = TRUE) %>%
+  res.felm <- felm(mrate ~ legal | state.char + year.char| 0 | state.char,
+                   DT2) %>%
       broom::tidy(.) %>% setDT
 
   ##The coefficients
@@ -49,14 +55,41 @@ test_that("Basic Setup works against felm", {
 
 })
 
-print("here1")
+test_that("Basic Setup works against felm with beercap.quantile", {
+  temp <- FeTrendsLm$new(DT = copy(DT),
+                         .f = ~ state.char + year.char,
+                         cluster.vars = c("state.char"),
+                         chunk.size = 5)
+  res <- temp$fetrendslm(y.var = "mrate", x.vars = c("legal", beercap.quantile.vars))
+
+  res.felm <- felm(mrate ~ legal+ beerpercap.quintile | state.char + year.char  | 0 |
+                     state.char,
+                   DT2, exactDOF = TRUE) %>%
+      broom::tidy(.) %>% setDT
+
+  ##The coefficients
+  res.coef <- res$DT.tidy[, estimate] %>% round(2)
+  felm.coef <- res.felm[, estimate] %>% round(2)
+  expect_true(all.equal(res.coef[1], felm.coef[1]))
+
+  ##The standard errors
+  felm.se <- res.felm[, std.error] %>% round(2)
+  res.se <- res$DT.tidy[, std.error] %>% round(2)
+  expect_true(all.equal(felm.se[1], res.se[1], tolerance = 0.2))
+
+})
 
 
 formulas <- list(
   ~ state.char,
   ~ state.char + year.char,
+  ~ year.char + state.char,
   ~ state.char + year.char + state.char:year,
-  ~ state.char + year.char + state.char:year + state.char:year2
+  ~ year.char + state.char + state.char:year,
+  ~ state.char + year.char + state.char:year + state.char:year2,
+  ~ year.char + state.char + state.char:year + state.char:year2,
+  ~ state.char + state.char:year,
+  ~ state.char + state.char:year + state.char:year2
 )
 
 y.vars <- c("mrate")
@@ -108,7 +141,7 @@ for (i in 1L:nrow(DT.test)) {
     weight.vals <- NULL
   }
 
-  use.clus.se <- !is.na(DT.temp[["cluster.vars"]][[1]])
+  use.clus.se <- !anyNA(DT.temp[["cluster.vars"]][[1]])
   if (use.clus.se) {
     cluster.vars <- DT.temp[["cluster.vars"]][[1]]
     cluster.vars.felm <- paste0(cluster.vars, collapse = " + ")
@@ -126,8 +159,6 @@ for (i in 1L:nrow(DT.test)) {
   .f <- DT.temp[[".f"]][[1]]
   x.vars <- DT.temp[["x.vars"]][[1]]
   y.var <- DT.temp[["y.var"]][[1]]
-
-  print("here3")
 
   temp <- FeTrendsLm$new(
     DT = copy(DT),
@@ -149,11 +180,14 @@ for (i in 1L:nrow(DT.test)) {
 
   if (weights) {
     res.felm <- felm(as.formula(f.felm), data = DT2, weights = weight.vals)
+
   } else {
     res.felm <- felm(as.formula(f.felm), data = DT2)
   }
+  res.felm.rse <- res.felm$rse %>% as.numeric
 
-  res.felm <- res.felm %>% broom::tidy(.) %>% setDT
+  res.felm <- res.felm %>% broom::tidy(.) %>% setDT %>%
+    .[, std.error := res.felm.rse]
 
   ##The coefficients
   res.coef <- res$DT.tidy[, estimate] %>% round(2)
@@ -163,6 +197,6 @@ for (i in 1L:nrow(DT.test)) {
   ##The standard errors
   felm.se <- res.felm[, std.error] %>% round(2)
   res.se <- res$DT.tidy[, std.error] %>% round(2)
-  expect_true(all.equal(felm.se, res.se, tolerance = 0.2))
+  expect_true(all.equal(felm.se, res.se, tolerance = 0.2), info = sprintf("i = %s", i))
 
 }

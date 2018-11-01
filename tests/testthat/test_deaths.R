@@ -39,7 +39,7 @@ test_that("Basic Setup works against felm", {
                          chunk.size = 5)
   res <- temp$fetrendslm(y.var = "mrate", x.vars = c("legal"))
 
-  res.felm <- felm(mrate ~ legal | state.char + year.char | 0 | state.char,
+  res.felm <- felm(mrate ~ legal | state.char + year.char| 0 | state.char,
                    DT2) %>%
       broom::tidy(.) %>% setDT
 
@@ -60,9 +60,9 @@ test_that("Basic Setup works against felm with beercap.quantile", {
                          .f = ~ state.char + year.char,
                          cluster.vars = c("state.char"),
                          chunk.size = 5)
-  res <- temp$fetrendslm(y.var = "mrate", x.vars = c("legal", beercap.quantile.vars))
+  res <- temp$fetrendslm(y.var = "mrate", x.vars = c("legal"))
 
-  res.felm <- felm(mrate ~ legal+ beerpercap.quintile | state.char + year.char  | 0 |
+  res.felm <- felm(mrate ~ legal | state.char + year.char | 0 |
                      state.char,
                    DT2, exactDOF = TRUE) %>%
       broom::tidy(.) %>% setDT

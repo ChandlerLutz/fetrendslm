@@ -116,7 +116,7 @@ initialize <- function(DT, .f, main.reg.vars = NULL, cluster.vars = NULL,
     .[, interaction := sapply(po.vars, function(x) as.integer(length(x) > 1))]
 
   ##Order by the character vector
-  DT.po.vars <- DT.po.vars[order(char.var)]
+  ##DT.po.vars <- DT.po.vars[order(char.var)]
   private$..DT.po.vars <- DT.po.vars
 
   ##The variables to keep
